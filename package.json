@@ -1,0 +1,26 @@
+{
+  "name": "kamagoalim",
+  "version": "1.0.0",
+  "description": "A live web app that displays the current number of goals for a specific football competition in real time.",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/GiantbYTES/kamagoalim.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "commonjs",
+  "bugs": {
+    "url": "https://github.com/GiantbYTES/kamagoalim/issues"
+  },
+  "homepage": "https://github.com/GiantbYTES/kamagoalim#readme",
+  "dependencies": {
+    "express": "^4.16.4",
+    "express-validator": "^7.2.1",
+    "react": "^19.1.1"
+  }
+}
