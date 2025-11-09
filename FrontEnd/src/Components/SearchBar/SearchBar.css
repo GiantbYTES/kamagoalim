@@ -1,0 +1,127 @@
+.search-bar-container {
+  width: 100%;
+  max-width: 500px;
+  margin: 0 auto;
+  padding: 20px;
+  position: relative;
+}
+
+.search-bar {
+  position: relative;
+  width: 100%;
+}
+
+.search-input {
+  width: 100%;
+  padding: 12px 40px 12px 16px;
+  font-size: 16px;
+  border: 2px solid #ddd;
+  border-radius: 8px;
+  outline: none;
+  transition: border-color 0.3s;
+  box-sizing: border-box;
+}
+
+.search-input:focus {
+  border-color: #4caf50;
+}
+
+.clear-button {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #999;
+  cursor: pointer;
+  padding: 4px 8px;
+  line-height: 1;
+  transition: color 0.3s;
+}
+
+.clear-button:hover {
+  color: #333;
+}
+
+.league-dropdown-list {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  background: white;
+  border: 2px solid #ddd;
+  border-top: none;
+  border-radius: 0 0 8px 8px;
+  max-height: 300px;
+  overflow-y: auto;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  z-index: 1000;
+  margin-top: -2px;
+}
+
+.league-dropdown-item {
+  padding: 12px 16px;
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: background-color 0.2s;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.league-dropdown-item:last-child {
+  border-bottom: none;
+}
+
+.league-dropdown-item:hover {
+  background-color: #f5f5f5;
+}
+
+.league-dropdown-item.no-results {
+  cursor: default;
+  color: #999;
+  justify-content: center;
+}
+
+.league-dropdown-item.no-results:hover {
+  background-color: white;
+}
+
+.league-name {
+  font-weight: 500;
+  color: #333;
+}
+
+.league-country {
+  font-size: 14px;
+  color: #666;
+  background-color: #f0f0f0;
+  padding: 4px 8px;
+  border-radius: 4px;
+}
+
+/* Mobile responsive */
+@media (max-width: 768px) {
+  .search-bar-container {
+    padding: 10px;
+  }
+
+  .search-input {
+    font-size: 14px;
+    padding: 10px 35px 10px 12px;
+  }
+
+  .league-dropdown-item {
+    padding: 10px 12px;
+  }
+
+  .league-name {
+    font-size: 14px;
+  }
+
+  .league-country {
+    font-size: 12px;
+  }
+}
