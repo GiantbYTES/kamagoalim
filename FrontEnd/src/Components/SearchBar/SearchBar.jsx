@@ -21,8 +21,8 @@ export const SearchBar = ({ onLeagueChange }) => {
   // Filter leagues based on search term
   const filteredLeagues = leagues.filter(
     (league) =>
-      league.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      league.country.toLowerCase().includes(searchTerm.toLowerCase())
+      league.name.toLowerCase().startsWith(searchTerm.toLowerCase()) ||
+      league.country.toLowerCase().startsWith(searchTerm.toLowerCase())
   );
 
   // Close dropdown when clicking outside
