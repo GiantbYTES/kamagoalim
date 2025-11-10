@@ -4,7 +4,7 @@ import "./SearchBar.css";
 export const SearchBar = ({ onLeagueChange }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [selectedLeague, setSelectedLeague] = useState(null);
+  const [selectedLeagues, setSelectedLeagues] = useState([]);
   const dropdownRef = useRef(null);
 
   const leagues = [
@@ -41,71 +41,100 @@ export const SearchBar = ({ onLeagueChange }) => {
     const value = e.target.value;
     setSearchTerm(value);
     setIsDropdownOpen(true);
-
-    // Clear selection when typing
-    if (selectedLeague) {
-      setSelectedLeague(null);
-      if (onLeagueChange) {
-        onLeagueChange("");
-      }
-    }
   };
 
   const handleLeagueSelect = (league) => {
-    setSelectedLeague(league);
-    setSearchTerm(league.name);
-    setIsDropdownOpen(false);
+    // Check if league is already selected
+    if (!selectedLeagues.find((l) => l.id === league.id)) {
+      const newSelectedLeagues = [...selectedLeagues, league];
+      setSelectedLeagues(newSelectedLeagues);
 
-    if (onLeagueChange) {
-      onLeagueChange(league.id);
+      if (onLeagueChange) {
+        onLeagueChange(newSelectedLeagues.map((l) => l.id));
+      }
     }
+
+    setSearchTerm("");
+    setIsDropdownOpen(false);
   };
 
   const handleInputFocus = () => {
     setIsDropdownOpen(true);
   };
 
-  const clearSelection = () => {
+  const removeLeague = (leagueId) => {
+    const newSelectedLeagues = selectedLeagues.filter((l) => l.id !== leagueId);
+    setSelectedLeagues(newSelectedLeagues);
+
+    if (onLeagueChange) {
+      onLeagueChange(newSelectedLeagues.map((l) => l.id));
+    }
+  };
+
+  const clearAllSelections = () => {
+    setSelectedLeagues([]);
     setSearchTerm("");
-    setSelectedLeague(null);
     setIsDropdownOpen(false);
 
     if (onLeagueChange) {
-      onLeagueChange("");
+      onLeagueChange([]);
+    }
+  };
+
+  const handleSearchClick = () => {
+    if (selectedLeagues.length > 0) {
+      // Trigger the search action when button is clicked
+      console.log("Searching for leagues:", selectedLeagues);
     }
   };
 
   return (
     <div className="search-bar-container" ref={dropdownRef}>
       <div className="search-bar">
-        <input
-          type="text"
-          className="search-input"
-          placeholder="Search for a league..."
-          value={searchTerm}
-          onChange={handleSearchChange}
-          onFocus={handleInputFocus}
-        />
+        <div className="search-input-wrapper">
+          <input
+            type="text"
+            className="search-input"
+            placeholder="Search for a league..."
+            value={searchTerm}
+            onChange={handleSearchChange}
+            onFocus={handleInputFocus}
+          />
+          {(searchTerm || selectedLeagues.length > 0) && (
+            <button
+              className="clear-input-button"
+              onClick={clearAllSelections}
+              aria-label="Clear all"
+            >
+              ✕
+            </button>
+          )}
+        </div>
 
-        {searchTerm && (
-          <button className="clear-button" onClick={clearSelection}>
-            ✕
-          </button>
-        )}
+        <button className="search-button" onClick={handleSearchClick}>
+          Search
+        </button>
 
         {isDropdownOpen && (
           <div className="league-dropdown-list">
             {filteredLeagues.length > 0 ? (
-              filteredLeagues.map((league) => (
-                <div
-                  key={league.id}
-                  className="league-dropdown-item"
-                  onClick={() => handleLeagueSelect(league)}
-                >
-                  <span className="league-name">{league.name}</span>
-                  <span className="league-country">{league.country}</span>
-                </div>
-              ))
+              filteredLeagues.map((league) => {
+                const isSelected = selectedLeagues.find(
+                  (l) => l.id === league.id
+                );
+                return (
+                  <div
+                    key={league.id}
+                    className={`league-dropdown-item ${
+                      isSelected ? "selected" : ""
+                    }`}
+                    onClick={() => handleLeagueSelect(league)}
+                  >
+                    <span className="league-name">{league.name}</span>
+                    <span className="league-country">{league.country}</span>
+                  </div>
+                );
+              })
             ) : (
               <div className="league-dropdown-item no-results">
                 No leagues found
@@ -114,6 +143,23 @@ export const SearchBar = ({ onLeagueChange }) => {
           </div>
         )}
       </div>
+
+      {selectedLeagues.length > 0 && (
+        <div className="selected-leagues">
+          {selectedLeagues.map((league) => (
+            <div key={league.id} className="selected-league-tag">
+              <span className="selected-league-name">{league.name}</span>
+              <button
+                className="remove-league-button"
+                onClick={() => removeLeague(league.id)}
+                aria-label={`Remove ${league.name}`}
+              >
+                ✕
+              </button>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 };
