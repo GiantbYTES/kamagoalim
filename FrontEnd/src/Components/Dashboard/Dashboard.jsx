@@ -1,11 +1,10 @@
 import "./Dashboard.css";
+import { SearchBar } from "../SearchBar/SearchBar";
 
 export function Dashboard() {
-    return (
-        <div className="Dashboard">
-
-			<p>Dashboard Component</p>
-
-        </div>
-    );
+  return (
+    <div className="Dashboard">
+      <SearchBar />
+    </div>
+  );
 }
