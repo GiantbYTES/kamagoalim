@@ -47,7 +47,7 @@ app.get("/api/fixtures", async (req, res) => {
     console.log(`Live fixtures: ${liveData.response?.length || 0}`);
 
     // Wait for 1 second before the next request
-    await new Promise((resolve) => setTimeout(resolve, 1000));
+    await new Promise((resolve) => setTimeout(resolve, 6000));
 
     // Fetch all today's fixtures without filter
     const todayResponse = await fetch(
