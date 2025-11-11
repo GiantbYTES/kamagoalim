@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import "./SearchBar.css";
 
-export const SearchBar = ({ onLeagueChange }) => {
+export const SearchBar = ({ onLeagueChange, onSearch }) => {
   const [searchTerm, setSearchTerm] = useState("");
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [selectedLeagues, setSelectedLeagues] = useState([]);
@@ -16,6 +16,7 @@ export const SearchBar = ({ onLeagueChange }) => {
     { id: 2, name: "UEFA Champions League", country: "World" },
     { id: 3, name: "UEFA Europa League", country: "World" },
     { id: 848, name: "UEFA Europa Conference League", country: "World" },
+    { id: 587, name: "U17 World Cup", country: "World" },
   ];
 
   // Filter leagues based on search term
@@ -82,9 +83,8 @@ export const SearchBar = ({ onLeagueChange }) => {
   };
 
   const handleSearchClick = () => {
-    if (selectedLeagues.length > 0) {
-      // Trigger the search action when button is clicked
-      console.log("Searching for leagues:", selectedLeagues);
+    if (selectedLeagues.length > 0 && onSearch) {
+      onSearch(selectedLeagues.map((l) => l.id));
     }
   };
 
