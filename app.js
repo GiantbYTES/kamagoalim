@@ -1,18 +1,39 @@
 require("dotenv").config();
 const express = require("express");
-// const fetch = require("node-fetch");
+const cors = require("cors");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
+
+// Enable CORS for React frontend
+app.use(cors());
 
 app.get("/health", (req, res) => {
   res.status(200).json({ status: "OK", timestamp: new Date().toISOString() });
 });
 
-app.get("/", async (req, res) => {
+app.get("/api/fixtures", async (req, res) => {
   try {
-    const response = await fetch(
-      "https://v3.football.api-sports.io/fixtures?live=all&league=39&league=140",
+    const leagues = req.query.leagues;
+
+    if (!leagues) {
+      return res.status(400).json({ error: "Please provide league IDs" });
+    }
+
+    // Parse league IDs into an array
+    const leagueIds = leagues.split(",").map((id) => id.trim());
+
+    // "1,2,3" => [1,2,3] => [league=1,league=2,league=3] => "league=1&league=2&league=3"
+    const leagueQuery = leagueIds.map((id) => `league=${id}`).join("&");
+
+    // Get today's date in YYYY-MM-DD format (ensure UTC)
+    const today = new Date().toISOString().split("T")[0];
+    console.log(`Fetching fixtures for date: ${today}`);
+    console.log(`Requested leagues: ${leagueIds.join(", ")}`);
+
+    // Fetch live fixtures with league filter first
+    const liveResponse = await fetch(
+      `https://v3.football.api-sports.io/fixtures?live=all&${leagueQuery}`,
       {
         method: "GET",
         headers: {
@@ -22,8 +43,66 @@ app.get("/", async (req, res) => {
       }
     );
 
-    const data = await response.json();
-    res.json(data);
+    const liveData = await liveResponse.json();
+    console.log(`Live fixtures: ${liveData.response?.length || 0}`);
+
+    // Wait for 1 second before the next request
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+
+    // Fetch all today's fixtures without filter
+    const todayResponse = await fetch(
+      `https://v3.football.api-sports.io/fixtures?date=${today}`,
+      {
+        method: "GET",
+        headers: {
+          "x-apisports-key": process.env.FOOTBALL_API_KEY,
+          "x-rapidapi-host": "v3.football.api-sports.io",
+        },
+      }
+    );
+
+    const todayData = await todayResponse.json();
+
+    console.log(`Live fixtures: ${liveData.response?.length || 0}`);
+    console.log(
+      `Today fixtures (before filter): ${todayData.response?.length || 0}`
+    );
+
+    // Filter today's fixtures by selected leagues
+    const filteredTodayFixtures = (todayData.response || []).filter((fixture) =>
+      leagueIds.includes(String(fixture.league.id))
+    );
+
+    console.log(
+      `Today fixtures (after filter): ${filteredTodayFixtures.length}`
+    );
+
+    if (filteredTodayFixtures.length > 0) {
+      console.log(
+        "Sample today fixture statuses:",
+        filteredTodayFixtures.slice(0, 5).map((f) => ({
+          id: f.fixture.id,
+          status: f.fixture.status.short,
+          home: f.teams.home.name,
+          away: f.teams.away.name,
+        }))
+      );
+    }
+
+    // Combine and deduplicate fixtures by ID
+    const allFixtures = [
+      ...(liveData.response || []),
+      ...filteredTodayFixtures,
+    ];
+    const uniqueFixtures = Array.from(
+      new Map(
+        allFixtures.map((fixture) => [fixture.fixture.id, fixture])
+      ).values()
+    );
+
+    console.log(`Total unique fixtures: ${uniqueFixtures.length}`);
+
+    res.json({ ...todayData, response: uniqueFixtures });
   } catch (err) {
     console.error("Error fetching from API-Football:", err);
     res.status(500).json({ error: "Failed to fetch data" });
