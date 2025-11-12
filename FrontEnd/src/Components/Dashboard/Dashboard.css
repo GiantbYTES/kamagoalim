@@ -5,7 +5,8 @@
   margin: 0 auto;
   padding: 20px;
   box-sizing: border-box;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: #141414;
+  border-top: 4px solid #02f784;
 }
 
 .fixtures-container {
@@ -17,16 +18,17 @@
 }
 
 .fixture-card {
-  background: white;
-  border-radius: 12px;
+  background: #0e0e0e;
+  border-radius: 4px;
+  border: 2px solid #2a2a2a;
   padding: 20px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-  transition: transform 0.2s, box-shadow 0.2s;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  transition: box-shadow 0.2s, border-color 0.2s;
 }
 
 .fixture-card:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 8px 12px rgba(0, 0, 0, 0.15);
+  box-shadow: 0 4px 8px rgba(2, 247, 132, 0.2);
+  border-color: #02f784;
 }
 
 .fixture-header {
@@ -35,36 +37,41 @@
   align-items: center;
   margin-bottom: 15px;
   padding-bottom: 10px;
-  border-bottom: 2px solid #f0f0f0;
+  border-bottom: 1px solid #2a2a2a;
 }
 
 .league-name {
   font-size: 0.85rem;
-  color: #666;
-  font-weight: 600;
+  color: #02f784;
+  font-weight: 700;
   text-transform: uppercase;
+  font-family: Arial, Helvetica, sans-serif;
+  letter-spacing: 0.5px;
 }
 
 .fixture-status {
-  color: white;
-  padding: 4px 10px;
-  border-radius: 12px;
-  font-size: 0.8rem;
+  color: #141414;
+  padding: 5px 12px;
+  border-radius: 3px;
+  font-size: 0.75rem;
   font-weight: bold;
+  font-family: Arial, Helvetica, sans-serif;
+  text-transform: uppercase;
 }
 
 .fixture-status.live {
-  background: #ff4757;
+  background: #02f784;
   animation: pulse 2s infinite;
 }
 
 .fixture-status.finished {
-  background: #95a5a6;
+  background: #666666;
+  color: #ffffff;
   animation: none;
 }
 
 .fixture-status.scheduled {
-  background: #3498db;
+  background: #02f784;
   animation: none;
 }
 
@@ -101,9 +108,10 @@
 
 .team-name {
   font-size: 0.9rem;
-  font-weight: 600;
-  color: #333;
+  font-weight: 700;
+  color: #ffffff;
   text-align: center;
+  font-family: Arial, Helvetica, sans-serif;
 }
 
 .score {
@@ -112,7 +120,8 @@
   gap: 8px;
   font-size: 2rem;
   font-weight: bold;
-  color: #333;
+  color: #02f784;
+  font-family: Georgia, "Times New Roman", serif;
 }
 
 .score-value {
@@ -121,14 +130,15 @@
 }
 
 .score-separator {
-  color: #999;
+  color: #666;
   font-size: 1.5rem;
 }
 
 .no-fixtures {
   text-align: center;
-  color: white;
-  font-size: 1.2rem;
+  color: #02f784;
+  font-size: 1.1rem;
   margin-top: 50px;
-  opacity: 0.9;
+  font-family: Georgia, "Times New Roman", serif;
+  font-style: italic;
 }
