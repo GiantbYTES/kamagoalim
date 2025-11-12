@@ -140,6 +140,31 @@
   box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
 }
 
+.european-celebration-button {
+  padding: 20px 40px;
+  font-size: 18px;
+  font-weight: 700;
+  background-color: #0066cc;
+  color: #ffffff;
+  border: 2px solid #0066cc;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background-color 0.2s, border-color 0.2s;
+  white-space: nowrap;
+  font-family: Arial, Helvetica, sans-serif;
+  letter-spacing: 0.5px;
+}
+
+.european-celebration-button:hover {
+  background-color: #0052a3;
+  border-color: #0052a3;
+}
+
+.european-celebration-button:active {
+  transform: none;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
 .league-dropdown-list {
   position: absolute;
   top: 100%;
@@ -226,6 +251,12 @@
   }
 
   .search-button {
+    width: 100%;
+    padding: 14px 24px;
+    font-size: 16px;
+  }
+
+  .european-celebration-button {
     width: 100%;
     padding: 14px 24px;
     font-size: 16px;

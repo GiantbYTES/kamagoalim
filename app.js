@@ -31,7 +31,7 @@ app.get("/api/fixtures", async (req, res) => {
     console.log(`Fetching fixtures for date: ${today}`);
     console.log(`Requested leagues: ${leagueIds.join(", ")}`);
 
-    // Fetch live fixtures with league filter first
+    // Fetch live fixtures with league filter
     const liveResponse = await fetch(
       `https://v3.football.api-sports.io/fixtures?live=all&${leagueQuery}`,
       {
@@ -46,63 +46,7 @@ app.get("/api/fixtures", async (req, res) => {
     const liveData = await liveResponse.json();
     console.log(`Live fixtures: ${liveData.response?.length || 0}`);
 
-    // Wait for 1 second before the next request
-    await new Promise((resolve) => setTimeout(resolve, 6000));
-
-    // Fetch all today's fixtures without filter
-    const todayResponse = await fetch(
-      `https://v3.football.api-sports.io/fixtures?date=${today}`,
-      {
-        method: "GET",
-        headers: {
-          "x-apisports-key": process.env.FOOTBALL_API_KEY,
-          "x-rapidapi-host": "v3.football.api-sports.io",
-        },
-      }
-    );
-
-    const todayData = await todayResponse.json();
-
-    console.log(`Live fixtures: ${liveData.response?.length || 0}`);
-    console.log(
-      `Today fixtures (before filter): ${todayData.response?.length || 0}`
-    );
-
-    // Filter today's fixtures by selected leagues
-    const filteredTodayFixtures = (todayData.response || []).filter((fixture) =>
-      leagueIds.includes(String(fixture.league.id))
-    );
-
-    console.log(
-      `Today fixtures (after filter): ${filteredTodayFixtures.length}`
-    );
-
-    if (filteredTodayFixtures.length > 0) {
-      console.log(
-        "Sample today fixture statuses:",
-        filteredTodayFixtures.slice(0, 5).map((f) => ({
-          id: f.fixture.id,
-          status: f.fixture.status.short,
-          home: f.teams.home.name,
-          away: f.teams.away.name,
-        }))
-      );
-    }
-
-    // Combine and deduplicate fixtures by ID
-    const allFixtures = [
-      ...(liveData.response || []),
-      ...filteredTodayFixtures,
-    ];
-    const uniqueFixtures = Array.from(
-      new Map(
-        allFixtures.map((fixture) => [fixture.fixture.id, fixture])
-      ).values()
-    );
-
-    console.log(`Total unique fixtures: ${uniqueFixtures.length}`);
-
-    res.json({ ...todayData, response: uniqueFixtures });
+    res.json(liveData);
   } catch (err) {
     console.error("Error fetching from API-Football:", err);
     res.status(500).json({ error: "Failed to fetch data" });
