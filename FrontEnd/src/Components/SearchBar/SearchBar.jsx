@@ -89,6 +89,24 @@ export const SearchBar = ({ onLeagueChange, onSearch }) => {
     }
   };
 
+  const handleEuropeanCelebration = () => {
+    const europaLeague = leagues.find((l) => l.id === 3); // UEFA Europa League
+    const conferenceLeague = leagues.find((l) => l.id === 848); // UEFA Europa Conference League
+
+    const leaguesToAdd = [europaLeague, conferenceLeague].filter(
+      (league) => league && !selectedLeagues.find((l) => l.id === league.id)
+    );
+
+    if (leaguesToAdd.length > 0) {
+      const newSelectedLeagues = [...selectedLeagues, ...leaguesToAdd];
+      setSelectedLeagues(newSelectedLeagues);
+
+      if (onLeagueChange) {
+        onLeagueChange(newSelectedLeagues.map((l) => l.id));
+      }
+    }
+  };
+
   return (
     <div className="search-bar-container" ref={dropdownRef}>
       <div className="search-bar">
@@ -114,6 +132,13 @@ export const SearchBar = ({ onLeagueChange, onSearch }) => {
 
         <button className="search-button" onClick={handleSearchClick}>
           Search
+        </button>
+
+        <button
+          className="european-celebration-button"
+          onClick={handleEuropeanCelebration}
+        >
+          חגיגה אירופית
         </button>
 
         {isDropdownOpen && (
