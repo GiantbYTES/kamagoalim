@@ -17,6 +17,7 @@ export const SearchBar = ({ onLeagueChange, onSearch }) => {
     { id: 3, name: "UEFA Europa League", country: "World" },
     { id: 848, name: "UEFA Europa Conference League", country: "World" },
     { id: 587, name: "U17 World Cup", country: "World" },
+    { id: 886, name: "U17 European Championship", country: "World" },
   ];
 
   // Filter leagues based on search term
