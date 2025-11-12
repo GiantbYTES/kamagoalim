@@ -58,9 +58,19 @@ export function Dashboard() {
     fetchFixtures(leagueIds);
   };
 
+  // Calculate total goals from all fixtures
+  const totalGoals = fixtures.reduce((sum, fixture) => {
+    const homeGoals = fixture.goals.home ?? 0;
+    const awayGoals = fixture.goals.away ?? 0;
+    return sum + homeGoals + awayGoals;
+  }, 0);
+
   return (
     <div className="Dashboard">
       <SearchBar onLeagueChange={handleLeagueChange} onSearch={handleSearch} />
+      {fixtures.length > 0 && (
+        <div className="total-goals">Total Goals: {totalGoals}</div>
+      )}
       <div className="fixtures-container">
         {fixtures.length > 0 ? (
           fixtures.map((fixture) => {
