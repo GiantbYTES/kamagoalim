@@ -59,13 +59,15 @@ app.get("/api/fixtures", async (req, res) => {
         // Look for embedded match data in script tags
         let matchData = "";
         let liveMatchData = ""; // For live match updates
-        
+
         $("script").each((i, elem) => {
           const scriptContent = $(elem).html();
           if (scriptContent) {
             // Look for fixtures/results data
-            if (scriptContent.includes('initialFeeds["summary-fixtures"]') ||
-                scriptContent.includes('initialFeeds["summary-results"]')) {
+            if (
+              scriptContent.includes('initialFeeds["summary-fixtures"]') ||
+              scriptContent.includes('initialFeeds["summary-results"]')
+            ) {
               const dataMatch = scriptContent.match(/data:\s*`([^`]+)`/);
               if (dataMatch) {
                 matchData = dataMatch[1];
@@ -74,7 +76,7 @@ app.get("/api/fixtures", async (req, res) => {
                 );
               }
             }
-            
+
             // Look for live match data (might have minute info)
             if (scriptContent.includes('initialFeeds["summary-live"]')) {
               const liveDataMatch = scriptContent.match(/data:\s*`([^`]+)`/);
@@ -100,65 +102,85 @@ app.get("/api/fixtures", async (req, res) => {
         // Scrape live match minutes using Puppeteer (only if there are live matches)
         const liveMinuteMap = {};
         const hasLiveMatches = matchData.includes("¬AB÷2¬");
-        
+
         if (hasLiveMatches) {
-          console.log("\n🌐 Launching Puppeteer to scrape live match minutes...");
+          console.log(
+            "\n🌐 Launching Puppeteer to scrape live match minutes..."
+          );
           try {
-            const browser = await puppeteer.launch({ 
+            const browser = await puppeteer.launch({
               headless: true,
-              args: ['--no-sandbox', '--disable-setuid-sandbox']
+              args: ["--no-sandbox", "--disable-setuid-sandbox"],
             });
             const page = await browser.newPage();
-            await page.goto(url, { waitUntil: 'networkidle2', timeout: 30000 });
-            
+            await page.goto(url, { waitUntil: "networkidle2", timeout: 30000 });
+
             // Wait for match elements to load
-            await page.waitForSelector('.event__match', { timeout: 5000 }).catch(() => {
-              console.log("No .event__match elements found");
-            });
-            
+            await page
+              .waitForSelector(".event__match", { timeout: 5000 })
+              .catch(() => {
+                console.log("No .event__match elements found");
+              });
+
             // Extract live minutes from rendered page
             const liveMinutes = await page.evaluate(() => {
               const matches = [];
-              document.querySelectorAll('.event__match').forEach((match) => {
-                const homeTeam = match.querySelector('.event__participant--home')?.textContent?.trim();
-                const awayTeam = match.querySelector('.event__participant--away')?.textContent?.trim();
-                const minuteEl = match.querySelector('.event__stage--block');
-                let minute = '';
-                
+              document.querySelectorAll(".event__match").forEach((match) => {
+                const homeTeam = match
+                  .querySelector(".event__participant--home")
+                  ?.textContent?.trim();
+                const awayTeam = match
+                  .querySelector(".event__participant--away")
+                  ?.textContent?.trim();
+                const minuteEl = match.querySelector(".event__stage--block");
+                let minute = "";
+
                 if (minuteEl) {
                   // Clone and remove child elements to get just the text
                   const clone = minuteEl.cloneNode(true);
-                  Array.from(clone.children).forEach(child => child.remove());
+                  Array.from(clone.children).forEach((child) => child.remove());
                   minute = clone.textContent.trim();
                 }
-                
-                matches.push({ 
-                  homeTeam: homeTeam || 'NO_HOME', 
-                  awayTeam: awayTeam || 'NO_AWAY', 
-                  minute: minute || 'NO_MINUTE',
-                  hasMinuteEl: !!minuteEl
+
+                matches.push({
+                  homeTeam: homeTeam || "NO_HOME",
+                  awayTeam: awayTeam || "NO_AWAY",
+                  minute: minute || "NO_MINUTE",
+                  hasMinuteEl: !!minuteEl,
                 });
               });
               return matches;
             });
-            
-            console.log(`  📊 Puppeteer found ${liveMinutes.length} match elements:`);
+
+            console.log(
+              `  📊 Puppeteer found ${liveMinutes.length} match elements:`
+            );
             liveMinutes.forEach((m, i) => {
-              console.log(`    [${i}] ${m.homeTeam} vs ${m.awayTeam} | minute: "${m.minute}" | hasEl: ${m.hasMinuteEl}`);
+              console.log(
+                `    [${i}] ${m.homeTeam} vs ${m.awayTeam} | minute: "${m.minute}" | hasEl: ${m.hasMinuteEl}`
+              );
             });
-            
+
             await browser.close();
-            
+
             // Store in map
-            liveMinutes.forEach(m => {
-              if (m.homeTeam !== 'NO_HOME' && m.awayTeam !== 'NO_AWAY' && m.minute !== 'NO_MINUTE') {
+            liveMinutes.forEach((m) => {
+              if (
+                m.homeTeam !== "NO_HOME" &&
+                m.awayTeam !== "NO_AWAY" &&
+                m.minute !== "NO_MINUTE"
+              ) {
                 const key = `${m.homeTeam}-vs-${m.awayTeam}`;
-                liveMinuteMap[key] = m.minute.replace(/\s+/g, '');
+                liveMinuteMap[key] = m.minute.replace(/\s+/g, "");
                 console.log(`  ✓ Stored: ${key} = ${liveMinuteMap[key]}'`);
               }
             });
-            
-            console.log(`🌐 Puppeteer scraping complete. Found ${Object.keys(liveMinuteMap).length} live matches.\n`);
+
+            console.log(
+              `🌐 Puppeteer scraping complete. Found ${
+                Object.keys(liveMinuteMap).length
+              } live matches.\n`
+            );
           } catch (error) {
             console.error("Error with Puppeteer:", error.message);
           }
@@ -199,9 +221,11 @@ app.get("/api/fixtures", async (req, res) => {
               console.log(`\nDEBUG - Live match found:`);
               console.log(`Teams: ${homeTeam} vs ${awayTeam}`);
               console.log(`ALL FIELDS:`);
-              Object.keys(fields).sort().forEach((k) => {
-                console.log(`  ${k}: ${fields[k]}`);
-              });
+              Object.keys(fields)
+                .sort()
+                .forEach((k) => {
+                  console.log(`  ${k}: ${fields[k]}`);
+                });
             }
 
             console.log(
@@ -220,14 +244,14 @@ app.get("/api/fixtures", async (req, res) => {
             // Check if we have minute data from Puppeteer scraping
             const matchKey = `${homeTeam}-vs-${awayTeam}`;
             const scrapedMinute = liveMinuteMap[matchKey];
-            
+
             // Determine status
             let statusShort = "NS";
             let elapsed = null;
             if (status === "2") {
               // Live match - use Puppeteer scraped minute
               statusShort = "LIVE";
-              
+
               if (scrapedMinute) {
                 elapsed = scrapedMinute;
                 console.log(
