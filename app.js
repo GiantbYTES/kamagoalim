@@ -55,34 +55,44 @@ app.get("/api/fixtures", async (req, res) => {
           `HTML loaded for ${leaguePath}, searching for embedded data...`
         );
 
-        // Look for embedded match data in script tags
-        let matchData = "";
+        // Look for embedded match data in script tags - extract BOTH fixtures and results
+        let fixturesData = "";
+        let resultsData = "";
         $("script").each((i, elem) => {
           const scriptContent = $(elem).html();
-          if (
-            scriptContent &&
-            (scriptContent.includes('initialFeeds["summary-fixtures"]') ||
-              scriptContent.includes('initialFeeds["summary-results"]'))
-          ) {
-            // Extract the data string
-            const dataMatch = scriptContent.match(/data:\s*`([^`]+)`/);
-            if (dataMatch) {
-              matchData = dataMatch[1];
-              console.log(
-                `Found match data in script tag (length: ${matchData.length})`
-              );
+          if (scriptContent) {
+            if (scriptContent.includes('initialFeeds["summary-fixtures"]')) {
+              const dataMatch = scriptContent.match(/data:\s*`([^`]+)`/);
+              if (dataMatch) {
+                fixturesData = dataMatch[1];
+                console.log(
+                  `Found fixtures data in script tag (length: ${fixturesData.length})`
+                );
+              }
+            }
+            if (scriptContent.includes('initialFeeds["summary-results"]')) {
+              const dataMatch = scriptContent.match(/data:\s*`([^`]+)`/);
+              if (dataMatch) {
+                resultsData = dataMatch[1];
+                console.log(
+                  `Found results data in script tag (length: ${resultsData.length})`
+                );
+              }
             }
           }
         });
 
-        if (!matchData) {
+        // Combine both data sources
+        const matchData = fixturesData + "~" + resultsData;
+        
+        if (!fixturesData && !resultsData) {
           console.log(`No embedded match data found for ${leaguePath}`);
           continue;
         }
 
         // Parse the custom format (¬ delimited fields)
         const matches = matchData.split("~");
-        console.log(`Found ${matches.length} potential match entries`);
+        console.log(`Found ${matches.length} potential match entries (${fixturesData ? 'fixtures' : ''}${fixturesData && resultsData ? '+' : ''}${resultsData ? 'results' : ''})`);
 
         // Simply filter by match status - only include live (status=2) and finished today (status=3)
         // No need for HTML filtering, just use the status from the script data
