@@ -5,6 +5,7 @@ import { SearchBar } from "../SearchBar/SearchBar";
 export function Dashboard() {
   const [fixtures, setFixtures] = useState([]);
   const [selectedLeagues, setSelectedLeagues] = useState([]);
+  const [updateTrigger, setUpdateTrigger] = useState(0);
 
   const fetchFixtures = async (leagueIds) => {
     if (!leagueIds || leagueIds.length === 0) {
@@ -58,6 +59,76 @@ export function Dashboard() {
     fetchFixtures(leagueIds);
   };
 
+  // Refresh a single fixture
+  const handleRefreshFixture = async (fixtureIndex) => {
+    if (selectedLeagues.length === 0) return;
+
+    try {
+      const leaguesParam = selectedLeagues.join(",");
+      const response = await fetch(
+        `http://localhost:3000/api/fixtures?leagues=${leaguesParam}`
+      );
+      const data = await response.json();
+
+      console.log("Refreshing fixture at index:", fixtureIndex);
+      console.log("Fresh data received:", data.response?.length, "fixtures");
+
+      const currentFixture = fixtures[fixtureIndex];
+
+      // Find the updated fixture by matching home and away team names
+      const updatedFixture = (data.response || []).find(
+        (f) =>
+          f.teams.home.name === currentFixture.teams.home.name &&
+          f.teams.away.name === currentFixture.teams.away.name
+      );
+
+      if (updatedFixture) {
+        console.log(
+          "Found updated fixture:",
+          updatedFixture.teams.home.name,
+          "vs",
+          updatedFixture.teams.away.name
+        );
+        console.log(
+          "Old score:",
+          currentFixture.goals.home,
+          "-",
+          currentFixture.goals.away,
+          "Old minute:",
+          currentFixture.fixture.status.elapsed
+        );
+        console.log(
+          "New score:",
+          updatedFixture.goals.home,
+          "-",
+          updatedFixture.goals.away,
+          "New minute:",
+          updatedFixture.fixture.status.elapsed
+        );
+
+        // Create a completely new array with updated fixture
+        setFixtures((prevFixtures) => {
+          const newFixtures = prevFixtures.map((fixture, idx) =>
+            idx === fixtureIndex ? updatedFixture : fixture
+          );
+          console.log("State updated, triggering re-render");
+          return newFixtures;
+        });
+        // Force re-render
+        setUpdateTrigger((prev) => prev + 1);
+      } else {
+        console.log(
+          "Could not find matching fixture for:",
+          currentFixture.teams.home.name,
+          "vs",
+          currentFixture.teams.away.name
+        );
+      }
+    } catch (error) {
+      console.error("Error refreshing fixture:", error);
+    }
+  };
+
   // Calculate total goals from all fixtures
   const totalGoals = fixtures.reduce((sum, fixture) => {
     const homeGoals = fixture.goals.home ?? 0;
@@ -73,9 +144,10 @@ export function Dashboard() {
       )}
       <div className="fixtures-container">
         {fixtures.length > 0 ? (
-          fixtures.map((fixture) => {
+          fixtures.map((fixture, index) => {
             const status = fixture.fixture.status.short;
             const isLive =
+              status === "LIVE" ||
               status === "1H" ||
               status === "HT" ||
               status === "2H" ||
@@ -86,20 +158,32 @@ export function Dashboard() {
               status === "FT" || status === "AET" || status === "PEN";
 
             return (
-              <div key={fixture.fixture.id} className="fixture-card">
+              <div
+                key={`${fixture.fixture.id}-${updateTrigger}`}
+                className="fixture-card"
+              >
                 <div className="fixture-header">
                   <span className="league-name">{fixture.league.name}</span>
-                  <span
-                    className={`fixture-status ${
-                      isFinished ? "finished" : isLive ? "live" : "scheduled"
-                    }`}
-                  >
-                    {isLive
-                      ? `${fixture.fixture.status.elapsed}'`
-                      : isFinished
-                      ? "FT"
-                      : fixture.fixture.status.short}
-                  </span>
+                  <div className="fixture-header-right">
+                    <span
+                      className={`fixture-status ${
+                        isFinished ? "finished" : isLive ? "live" : "scheduled"
+                      }`}
+                    >
+                      {isLive && fixture.fixture.status.elapsed
+                        ? `${fixture.fixture.status.elapsed}'`
+                        : isFinished
+                        ? "FT"
+                        : fixture.fixture.status.short}
+                    </span>
+                    <button
+                      className="refresh-button"
+                      onClick={() => handleRefreshFixture(index)}
+                      title="Refresh this match"
+                    >
+                      🔄
+                    </button>
+                  </div>
                 </div>
 
                 <div className="match-info">
