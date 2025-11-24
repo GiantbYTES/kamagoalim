@@ -8,15 +8,36 @@ export const SearchBar = ({ onLeagueChange, onSearch }) => {
   const dropdownRef = useRef(null);
 
   const leagues = [
-    { id: 140, name: "La Liga", country: "Spain" },
-    { id: 39, name: "Premier League", country: "England" },
-    { id: 61, name: "Ligue 1", country: "France" },
-    { id: 78, name: "Bundesliga", country: "Germany" },
-    { id: 135, name: "Serie A", country: "Italy" },
-    { id: 2, name: "UEFA Champions League", country: "World" },
-    { id: 3, name: "UEFA Europa League", country: "World" },
-    { id: 848, name: "UEFA Europa Conference League", country: "World" },
-    { id: 587, name: "U17 World Cup", country: "World" },
+    { id: "spain/laliga", name: "La Liga", country: "Spain" },
+    {
+      id: "england/premier-league",
+      name: "Premier League",
+      country: "England",
+    },
+    { id: "france/ligue-1", name: "Ligue 1", country: "France" },
+    { id: "germany/bundesliga", name: "Bundesliga", country: "Germany" },
+    { id: "italy/serie-a", name: "Serie A", country: "Italy" },
+    {
+      id: "europe/champions-league",
+      name: "UEFA Champions League",
+      country: "World",
+    },
+    {
+      id: "europe/europa-league",
+      name: "UEFA Europa League",
+      country: "World",
+    },
+    {
+      id: "europe/conference-league",
+      name: "UEFA Europa Conference League",
+      country: "World",
+    },
+    {
+      id: "europe/elite-league-u20",
+      name: "Elite League U20",
+      country: "Europe",
+    },
+    { id: "europe/world-cup", name: "World Cup", country: "World" },
   ];
 
   // Filter leagues based on search term
@@ -89,8 +110,10 @@ export const SearchBar = ({ onLeagueChange, onSearch }) => {
   };
 
   const handleEuropeanCelebration = () => {
-    const europaLeague = leagues.find((l) => l.id === 3); // UEFA Europa League
-    const conferenceLeague = leagues.find((l) => l.id === 848); // UEFA Europa Conference League
+    const europaLeague = leagues.find((l) => l.id === "europe/europa-league"); // UEFA Europa League
+    const conferenceLeague = leagues.find(
+      (l) => l.id === "europe/conference-league"
+    ); // UEFA Europa Conference League
 
     const leaguesToAdd = [europaLeague, conferenceLeague].filter(
       (league) => league && !selectedLeagues.find((l) => l.id === league.id)
