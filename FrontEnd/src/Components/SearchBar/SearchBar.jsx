@@ -18,6 +18,16 @@ export const SearchBar = ({ onLeagueChange, onSearch }) => {
     { id: "germany/bundesliga", name: "Bundesliga", country: "Germany" },
     { id: "italy/serie-a", name: "Serie A", country: "Italy" },
     {
+      id: "albania/kategoria-e-pare",
+      name: "Kategoria e Pare",
+      country: "Albania",
+    },
+    {
+      id: "nigeria/npfl",
+      name: "NPFL",
+      country: "Nigeria",
+    },
+    {
       id: "europe/champions-league",
       name: "UEFA Champions League",
       country: "World",

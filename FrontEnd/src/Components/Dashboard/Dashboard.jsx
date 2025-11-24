@@ -170,8 +170,10 @@ export function Dashboard() {
                         isFinished ? "finished" : isLive ? "live" : "scheduled"
                       }`}
                     >
-                      {isLive && fixture.fixture.status.elapsed
-                        ? `${fixture.fixture.status.elapsed}'`
+                      {isLive
+                        ? fixture.fixture.status.elapsed
+                          ? `${fixture.fixture.status.elapsed}'`
+                          : "LIVE"
                         : isFinished
                         ? "FT"
                         : fixture.fixture.status.short}
