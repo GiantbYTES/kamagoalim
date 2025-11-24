@@ -95,6 +95,7 @@ app.get("/api/fixtures", async (req, res) => {
         const matches = matchData.split("~");
         console.log(`Found ${matches.length} potential match entries (${fixturesData ? 'fixtures' : ''}${fixturesData && resultsData ? '+' : ''}${resultsData ? 'results' : ''})`);
 
+<<<<<<< HEAD
         // Scrape live match minutes using Puppeteer (only if there are live matches)
         const liveMinuteMap = {};
         const hasLiveMatches = matchData.includes("¬AB÷2¬");
@@ -147,6 +148,25 @@ app.get("/api/fixtures", async (req, res) => {
               });
               return matches;
             });
+=======
+        // Also scrape minute data from HTML elements
+        const minuteMap = {};
+        $(".event__match").each((i, elem) => {
+          const $match = $(elem);
+          const homeTeamName = $match
+            .find(".event__participant--home")
+            .text()
+            .trim();
+          const awayTeamName = $match
+            .find(".event__participant--away")
+            .text()
+            .trim();
+          const minuteText = $match
+            .find(".event__stage--block")
+            .first()
+            .text()
+            .trim();
+>>>>>>> parent of 3894f0e (Merge pull request #14 from GiantbYTES/guy)
 
             console.log(
               `  📊 Puppeteer found ${liveMinutes.length} match elements:`
@@ -237,7 +257,11 @@ app.get("/api/fixtures", async (req, res) => {
               return;
             }
 
+<<<<<<< HEAD
             // Check if we have minute data from Puppeteer scraping
+=======
+            // Check if we have minute data from HTML scraping
+>>>>>>> parent of 3894f0e (Merge pull request #14 from GiantbYTES/guy)
             const matchKey = `${homeTeam}-vs-${awayTeam}`;
             const scrapedMinute = liveMinuteMap[matchKey];
 

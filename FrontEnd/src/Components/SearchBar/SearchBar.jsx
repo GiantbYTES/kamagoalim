@@ -10,11 +10,6 @@ export const SearchBar = ({ onLeagueChange, onSearch }) => {
   const leagues = [
     { id: "spain/laliga", name: "La Liga", country: "Spain" },
     {
-      id: "albania/kategoria-e-pare",
-      name: "Kategoria e Pare",
-      country: "Albania",
-    },
-    {
       id: "england/premier-league",
       name: "Premier League",
       country: "England",
@@ -52,7 +47,6 @@ export const SearchBar = ({ onLeagueChange, onSearch }) => {
       name: "Elite League U20",
       country: "Europe",
     },
-
     { id: "europe/world-cup", name: "World Cup", country: "World" },
   ];
 
