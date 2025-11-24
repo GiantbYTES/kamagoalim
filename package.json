@@ -30,6 +30,7 @@
     "express": "^4.16.4",
     "express-validator": "^7.2.1",
     "nodemon": "^3.1.10",
+    "puppeteer": "^24.31.0",
     "react": "^19.1.1",
     "react-cli-snippets": "^1.2.6",
     "react-dom": "^19.1.1"
