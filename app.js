@@ -84,7 +84,10 @@ app.get("/api/fixtures", async (req, res) => {
         const matches = matchData.split("~");
         console.log(`Found ${matches.length} potential match entries`);
 
-        // Also scrape minute data from HTML elements
+        // Simply filter by match status - only include live (status=2) and finished today (status=3)
+        // No need for HTML filtering, just use the status from the script data
+
+        // Scrape minute data from HTML elements for all matches
         const minuteMap = {};
         $(".event__match").each((i, elem) => {
           const $match = $(elem);
@@ -167,6 +170,23 @@ app.get("/api/fixtures", async (req, res) => {
             if (!homeTeam || !awayTeam) {
               console.log(`Skipping: missing team names`);
               return;
+            }
+
+            // Check if match is today by comparing date
+            const matchTimestamp = fields["AD"]; // Match date timestamp
+            if (matchTimestamp) {
+              const matchDate = new Date(parseInt(matchTimestamp) * 1000);
+              const today = new Date();
+              
+              // Check if match is today (same day)
+              const isTodayMatch = matchDate.getDate() === today.getDate() &&
+                                   matchDate.getMonth() === today.getMonth() &&
+                                   matchDate.getFullYear() === today.getFullYear();
+              
+              if (!isTodayMatch) {
+                console.log(`Skipping match not today (${matchDate.toDateString()}): ${homeTeam} vs ${awayTeam}`);
+                return;
+              }
             }
 
             // Check if we have minute data from HTML scraping
