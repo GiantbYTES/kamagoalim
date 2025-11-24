@@ -56,48 +56,44 @@ app.get("/api/fixtures", async (req, res) => {
           `HTML loaded for ${leaguePath}, searching for embedded data...`
         );
 
-        // Look for embedded match data in script tags
-        let matchData = "";
-        let liveMatchData = ""; // For live match updates
-
+        // Look for embedded match data in script tags - extract BOTH fixtures and results
+        let fixturesData = "";
+        let resultsData = "";
         $("script").each((i, elem) => {
           const scriptContent = $(elem).html();
           if (scriptContent) {
-            // Look for fixtures/results data
-            if (
-              scriptContent.includes('initialFeeds["summary-fixtures"]') ||
-              scriptContent.includes('initialFeeds["summary-results"]')
-            ) {
+            if (scriptContent.includes('initialFeeds["summary-fixtures"]')) {
               const dataMatch = scriptContent.match(/data:\s*`([^`]+)`/);
               if (dataMatch) {
-                matchData = dataMatch[1];
+                fixturesData = dataMatch[1];
                 console.log(
-                  `Found match data in script tag (length: ${matchData.length})`
+                  `Found fixtures data in script tag (length: ${fixturesData.length})`
                 );
               }
             }
-
-            // Look for live match data (might have minute info)
-            if (scriptContent.includes('initialFeeds["summary-live"]')) {
-              const liveDataMatch = scriptContent.match(/data:\s*`([^`]+)`/);
-              if (liveDataMatch) {
-                liveMatchData = liveDataMatch[1];
+            if (scriptContent.includes('initialFeeds["summary-results"]')) {
+              const dataMatch = scriptContent.match(/data:\s*`([^`]+)`/);
+              if (dataMatch) {
+                resultsData = dataMatch[1];
                 console.log(
-                  `Found LIVE match data in script tag (length: ${liveMatchData.length})`
+                  `Found results data in script tag (length: ${resultsData.length})`
                 );
               }
             }
           }
         });
 
-        if (!matchData) {
+        // Combine both data sources
+        const matchData = fixturesData + "~" + resultsData;
+        
+        if (!fixturesData && !resultsData) {
           console.log(`No embedded match data found for ${leaguePath}`);
           continue;
         }
 
         // Parse the custom format (¬ delimited fields)
         const matches = matchData.split("~");
-        console.log(`Found ${matches.length} potential match entries`);
+        console.log(`Found ${matches.length} potential match entries (${fixturesData ? 'fixtures' : ''}${fixturesData && resultsData ? '+' : ''}${resultsData ? 'results' : ''})`);
 
         // Scrape live match minutes using Puppeteer (only if there are live matches)
         const liveMinuteMap = {};
