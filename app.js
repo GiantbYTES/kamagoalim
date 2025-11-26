@@ -3,7 +3,6 @@ const express = require("express");
 const cors = require("cors");
 const axios = require("axios");
 const cheerio = require("cheerio");
-const puppeteer = require("puppeteer");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -56,131 +55,64 @@ app.get("/api/fixtures", async (req, res) => {
           `HTML loaded for ${leaguePath}, searching for embedded data...`
         );
 
-        // Look for embedded match data in script tags - extract BOTH fixtures and results
-        let fixturesData = "";
-        let resultsData = "";
+        // Look for embedded match data in script tags
+        let matchData = "";
         $("script").each((i, elem) => {
           const scriptContent = $(elem).html();
-          if (scriptContent) {
-            if (scriptContent.includes('initialFeeds["summary-fixtures"]')) {
-              const dataMatch = scriptContent.match(/data:\s*`([^`]+)`/);
-              if (dataMatch) {
-                fixturesData = dataMatch[1];
-                console.log(
-                  `Found fixtures data in script tag (length: ${fixturesData.length})`
-                );
-              }
-            }
-            if (scriptContent.includes('initialFeeds["summary-results"]')) {
-              const dataMatch = scriptContent.match(/data:\s*`([^`]+)`/);
-              if (dataMatch) {
-                resultsData = dataMatch[1];
-                console.log(
-                  `Found results data in script tag (length: ${resultsData.length})`
-                );
-              }
+          if (
+            scriptContent &&
+            (scriptContent.includes('initialFeeds["summary-fixtures"]') ||
+              scriptContent.includes('initialFeeds["summary-results"]'))
+          ) {
+            // Extract the data string
+            const dataMatch = scriptContent.match(/data:\s*`([^`]+)`/);
+            if (dataMatch) {
+              matchData += (matchData ? "~" : "") + dataMatch[1];
+              console.log(
+                `Found match data in script tag (length: ${matchData.length} and content: ` + typeof(matchData) + `...`
+              );
             }
           }
         });
 
-        // Combine both data sources
-        const matchData = fixturesData + "~" + resultsData;
-        
-        if (!fixturesData && !resultsData) {
+        if (!matchData) {
           console.log(`No embedded match data found for ${leaguePath}`);
           continue;
         }
 
         // Parse the custom format (¬ delimited fields)
         const matches = matchData.split("~");
-        console.log(`Found ${matches.length} potential match entries (${fixturesData ? 'fixtures' : ''}${fixturesData && resultsData ? '+' : ''}${resultsData ? 'results' : ''})`);
+        console.log(`Found ${matches.length} potential match entries`);
 
-        // Scrape live match minutes using Puppeteer (only if there are live matches)
-        const liveMinuteMap = {};
-        const hasLiveMatches = matchData.includes("¬AB÷2¬");
+        // Simply filter by match status - only include live (status=2) and finished today (status=3)
+        // No need for HTML filtering, just use the status from the script data
 
-        if (hasLiveMatches) {
-          console.log(
-            "\n🌐 Launching Puppeteer to scrape live match minutes..."
-          );
-          try {
-            const browser = await puppeteer.launch({
-              headless: true,
-              args: ["--no-sandbox", "--disable-setuid-sandbox"],
-            });
-            const page = await browser.newPage();
-            await page.goto(url, { waitUntil: "networkidle2", timeout: 30000 });
+        // Scrape minute data from HTML elements for all matches
+        const minuteMap = {};
+        $(".event__match").each((i, elem) => {
+          const $match = $(elem);
+          const homeTeamName = $match
+            .find(".event__participant--home")
+            .text()
+            .trim();
+          const awayTeamName = $match
+            .find(".event__participant--away")
+            .text()
+            .trim();
+          const minuteText = $match
+            .find(".event__stage--block")
+            .first()
+            .text()
+            .trim();
 
-            // Wait for match elements to load
-            await page
-              .waitForSelector(".event__match", { timeout: 5000 })
-              .catch(() => {
-                console.log("No .event__match elements found");
-              });
-
-            // Extract live minutes from rendered page
-            const liveMinutes = await page.evaluate(() => {
-              const matches = [];
-              document.querySelectorAll(".event__match").forEach((match) => {
-                const homeTeam = match
-                  .querySelector(".event__participant--home")
-                  ?.textContent?.trim();
-                const awayTeam = match
-                  .querySelector(".event__participant--away")
-                  ?.textContent?.trim();
-                const minuteEl = match.querySelector(".event__stage--block");
-                let minute = "";
-
-                if (minuteEl) {
-                  // Clone and remove child elements to get just the text
-                  const clone = minuteEl.cloneNode(true);
-                  Array.from(clone.children).forEach((child) => child.remove());
-                  minute = clone.textContent.trim();
-                }
-
-                matches.push({
-                  homeTeam: homeTeam || "NO_HOME",
-                  awayTeam: awayTeam || "NO_AWAY",
-                  minute: minute || "NO_MINUTE",
-                  hasMinuteEl: !!minuteEl,
-                });
-              });
-              return matches;
-            });
-
+          if (homeTeamName && awayTeamName && minuteText) {
+            const key = `${homeTeamName}-vs-${awayTeamName}`;
+            minuteMap[key] = minuteText.replace(/\s+/g, ""); // Remove whitespace and blinking space
             console.log(
-              `  📊 Puppeteer found ${liveMinutes.length} match elements:`
+              `Found minute from HTML: ${homeTeamName} vs ${awayTeamName} = ${minuteText}`
             );
-            liveMinutes.forEach((m, i) => {
-              console.log(
-                `    [${i}] ${m.homeTeam} vs ${m.awayTeam} | minute: "${m.minute}" | hasEl: ${m.hasMinuteEl}`
-              );
-            });
-
-            await browser.close();
-
-            // Store in map
-            liveMinutes.forEach((m) => {
-              if (
-                m.homeTeam !== "NO_HOME" &&
-                m.awayTeam !== "NO_AWAY" &&
-                m.minute !== "NO_MINUTE"
-              ) {
-                const key = `${m.homeTeam}-vs-${m.awayTeam}`;
-                liveMinuteMap[key] = m.minute.replace(/\s+/g, "");
-                console.log(`  ✓ Stored: ${key} = ${liveMinuteMap[key]}'`);
-              }
-            });
-
-            console.log(
-              `🌐 Puppeteer scraping complete. Found ${
-                Object.keys(liveMinuteMap).length
-              } live matches.\n`
-            );
-          } catch (error) {
-            console.error("Error with Puppeteer:", error.message);
           }
-        }
+        });
 
         matches.forEach((matchStr, idx) => {
           try {
@@ -216,12 +148,15 @@ app.get("/api/fixtures", async (req, res) => {
             if (homeTeam && awayTeam && status === "2") {
               console.log(`\nDEBUG - Live match found:`);
               console.log(`Teams: ${homeTeam} vs ${awayTeam}`);
-              console.log(`ALL FIELDS:`);
-              Object.keys(fields)
-                .sort()
-                .forEach((k) => {
-                  console.log(`  ${k}: ${fields[k]}`);
-                });
+              console.log(`AC (minute?): ${minute}`);
+              console.log(`BA (period/time?): ${periodTime}`);
+              console.log(
+                `All A* fields:`,
+                Object.keys(fields)
+                  .filter((k) => k.startsWith("A") || k.startsWith("B"))
+                  .map((k) => `${k}:${fields[k]}`)
+                  .join(", ")
+              );
             }
 
             console.log(
@@ -237,26 +172,47 @@ app.get("/api/fixtures", async (req, res) => {
               return;
             }
 
-            // Check if we have minute data from Puppeteer scraping
+            // Check if match is today by comparing date
+            const matchTimestamp = fields["AD"]; // Match date timestamp
+            if (matchTimestamp) {
+              const matchDate = new Date(parseInt(matchTimestamp) * 1000);
+              const today = new Date();
+
+              // Check if match is today (same day)
+              const isTodayMatch =
+                matchDate.getDate() === today.getDate() &&
+                matchDate.getMonth() === today.getMonth() &&
+                matchDate.getFullYear() === today.getFullYear();
+
+              if (!isTodayMatch) {
+                console.log(
+                  `Skipping match not today (${matchDate.toDateString()}): ${homeTeam} vs ${awayTeam}`
+                );
+                return;
+              }
+            }
+
+            // Check if we have minute data from HTML scraping
             const matchKey = `${homeTeam}-vs-${awayTeam}`;
-            const scrapedMinute = liveMinuteMap[matchKey];
+            const scrapedMinute = minuteMap[matchKey];
 
             // Determine status
             let statusShort = "NS";
             let elapsed = null;
             if (status === "2") {
-              // Live match - use Puppeteer scraped minute
+              // Live match - use scraped minute if available
               statusShort = "LIVE";
-
               if (scrapedMinute) {
-                elapsed = scrapedMinute;
-                console.log(
-                  `✓ Using live minute for ${homeTeam} vs ${awayTeam}: ${scrapedMinute}'`
-                );
-              } else {
-                console.log(
-                  `✗ No minute found for ${homeTeam} vs ${awayTeam} (matchId: ${matchId})`
-                );
+                // Parse the minute (e.g., "90+7" -> 97, "45" -> 45)
+                const minuteMatch = scrapedMinute.match(/(\d+)(?:\+(\d+))?/);
+                if (minuteMatch) {
+                  const baseMinute = parseInt(minuteMatch[1]) || 0;
+                  const addedMinute = parseInt(minuteMatch[2]) || 0;
+                  elapsed = baseMinute + addedMinute;
+                  console.log(
+                    `Using scraped minute for ${homeTeam} vs ${awayTeam}: ${scrapedMinute} -> ${elapsed}'`
+                  );
+                }
               }
             } else if (status === "3") {
               // Finished match
