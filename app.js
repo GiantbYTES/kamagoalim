@@ -67,9 +67,9 @@ app.get("/api/fixtures", async (req, res) => {
             // Extract the data string
             const dataMatch = scriptContent.match(/data:\s*`([^`]+)`/);
             if (dataMatch) {
-              matchData = dataMatch[1];
+              matchData += (matchData ? "~" : "") + dataMatch[1];
               console.log(
-                `Found match data in script tag (length: ${matchData.length})`
+                `Found match data in script tag (length: ${matchData.length} and content: ` + typeof(matchData) + `...`
               );
             }
           }
