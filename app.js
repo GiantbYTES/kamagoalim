@@ -3,6 +3,7 @@ const express = require("express");
 const cors = require("cors");
 const axios = require("axios");
 const cheerio = require("cheerio");
+
 const app = express();
 const PORT = process.env.PORT || 3000;
 // Enable CORS for React frontend
@@ -55,9 +56,9 @@ app.get("/api/fixtures", async (req, res) => {
             // Extract the data string
             const dataMatch = scriptContent.match(/data:\s*`([^`]+)`/);
             if (dataMatch) {
-              matchData = dataMatch[1];
+              matchData += (matchData ? "~" : "") + dataMatch[1];
               console.log(
-                `Found match data in script tag (length: ${matchData.length})`
+                `Found match data in script tag (length: ${matchData.length} and content: ` + typeof(matchData) + `...`
               );
             }
           }
@@ -69,8 +70,10 @@ app.get("/api/fixtures", async (req, res) => {
         // Parse the custom format (¬ delimited fields)
         const matches = matchData.split("~");
         console.log(`Found ${matches.length} potential match entries`);
+
         // Simply filter by match status - only include live (status=2) and finished today (status=3)
         // No need for HTML filtering, just use the status from the script data
+
         // Scrape minute data from HTML elements for all matches
         const minuteMap = {};
         $(".event__match").each((i, elem) => {
@@ -88,6 +91,7 @@ app.get("/api/fixtures", async (req, res) => {
             .first()
             .text()
             .trim();
+
           if (homeTeamName && awayTeamName && minuteText) {
             const key = `${homeTeamName}-vs-${awayTeamName}`;
             minuteMap[key] = minuteText.replace(/\s+/g, ""); // Remove whitespace and blinking space
@@ -96,6 +100,7 @@ app.get("/api/fixtures", async (req, res) => {
             );
           }
         });
+
         matches.forEach((matchStr, idx) => {
           try {
             if (!matchStr.includes("AA÷")) return; // Not a match entry
@@ -148,6 +153,8 @@ app.get("/api/fixtures", async (req, res) => {
               console.log(`Skipping: missing team names`);
               return;
             }
+
+
             // Check if match is today by comparing date
             const matchTimestamp = fields["AD"]; // Match date timestamp
             if (matchTimestamp) {
@@ -167,9 +174,12 @@ app.get("/api/fixtures", async (req, res) => {
                 return;
               }
             }
+
+
             // Check if we have minute data from HTML scraping
             const matchKey = `${homeTeam}-vs-${awayTeam}`;
             const scrapedMinute = minuteMap[matchKey];
+
             // Determine status
             let statusShort = "NS";
             let elapsed = null;
