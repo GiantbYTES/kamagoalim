@@ -10,11 +10,6 @@ export const SearchBar = ({ onLeagueChange, onSearch }) => {
   const leagues = [
     { id: "spain/laliga", name: "La Liga", country: "Spain" },
     {
-      id: "albania/kategoria-e-pare",
-      name: "Kategoria e Pare",
-      country: "Albania",
-    },
-    {
       id: "england/premier-league",
       name: "Premier League",
       country: "England",
@@ -22,6 +17,16 @@ export const SearchBar = ({ onLeagueChange, onSearch }) => {
     { id: "france/ligue-1", name: "Ligue 1", country: "France" },
     { id: "germany/bundesliga", name: "Bundesliga", country: "Germany" },
     { id: "italy/serie-a", name: "Serie A", country: "Italy" },
+    {
+      id: "albania/kategoria-e-pare",
+      name: "Kategoria e Pare",
+      country: "Albania",
+    },
+    {
+      id: "nigeria/npfl",
+      name: "NPFL",
+      country: "Nigeria",
+    },
     {
       id: "europe/champions-league",
       name: "UEFA Champions League",

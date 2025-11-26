@@ -177,14 +177,17 @@ app.get("/api/fixtures", async (req, res) => {
             if (matchTimestamp) {
               const matchDate = new Date(parseInt(matchTimestamp) * 1000);
               const today = new Date();
-              
+
               // Check if match is today (same day)
-              const isTodayMatch = matchDate.getDate() === today.getDate() &&
-                                   matchDate.getMonth() === today.getMonth() &&
-                                   matchDate.getFullYear() === today.getFullYear();
-              
+              const isTodayMatch =
+                matchDate.getDate() === today.getDate() &&
+                matchDate.getMonth() === today.getMonth() &&
+                matchDate.getFullYear() === today.getFullYear();
+
               if (!isTodayMatch) {
-                console.log(`Skipping match not today (${matchDate.toDateString()}): ${homeTeam} vs ${awayTeam}`);
+                console.log(
+                  `Skipping match not today (${matchDate.toDateString()}): ${homeTeam} vs ${awayTeam}`
+                );
                 return;
               }
             }
