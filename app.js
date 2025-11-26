@@ -6,40 +6,31 @@ const cheerio = require("cheerio");
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-
 // Enable CORS for React frontend
 app.use(cors());
-
 app.get("/health", (req, res) => {
   res.status(200).json({ status: "OK", timestamp: new Date().toISOString() });
 });
-
 app.get("/api/fixtures", async (req, res) => {
   try {
     const leagues = req.query.leagues;
-
     if (!leagues) {
       return res.status(400).json({
         error:
           "Please provide league paths (e.g., 'europe/europa-league,england/premier-league')",
       });
     }
-
     console.log("Starting web scraping from livescore.in...");
-
     // Parse league paths into an array
     const leaguePaths = leagues.split(",").map((path) => path.trim());
     console.log(`Requested leagues: ${leaguePaths.join(", ")}`);
-
     const allFixtures = [];
     let fixtureId = 1;
-
     // Fetch data for each league
     for (const leaguePath of leaguePaths) {
       try {
         const url = `https://www.livescore.in/football/${leaguePath}/`;
         console.log(`Fetching from: ${url}`);
-
         // Fetch the HTML from livescore.in
         const { data } = await axios.get(url, {
           headers: {
@@ -47,14 +38,12 @@ app.get("/api/fixtures", async (req, res) => {
               "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/91.0.4472.124 Safari/537.36",
           },
         });
-
+        console.log("this is data: " + data + "\n");
         // Load HTML into cheerio
         const $ = cheerio.load(data);
-
         console.log(
           `HTML loaded for ${leaguePath}, searching for embedded data...`
         );
-
         // Look for embedded match data in script tags
         let matchData = "";
         $("script").each((i, elem) => {
@@ -74,12 +63,10 @@ app.get("/api/fixtures", async (req, res) => {
             }
           }
         });
-
         if (!matchData) {
           console.log(`No embedded match data found for ${leaguePath}`);
           continue;
         }
-
         // Parse the custom format (¬ delimited fields)
         const matches = matchData.split("~");
         console.log(`Found ${matches.length} potential match entries`);
@@ -117,7 +104,6 @@ app.get("/api/fixtures", async (req, res) => {
         matches.forEach((matchStr, idx) => {
           try {
             if (!matchStr.includes("AA÷")) return; // Not a match entry
-
             const fields = {};
             matchStr.split("¬").forEach((field) => {
               if (field.includes("÷")) {
@@ -125,7 +111,6 @@ app.get("/api/fixtures", async (req, res) => {
                 fields[key] = value;
               }
             });
-
             // Extract match information using correct field codes
             // AA = Match ID
             // AE = Home team name
@@ -143,7 +128,6 @@ app.get("/api/fixtures", async (req, res) => {
             const status = fields["AB"] || "1";
             const minute = fields["AC"];
             const periodTime = fields["BA"]; // This might have the actual minute
-
             // Log all relevant fields for debugging
             if (homeTeam && awayTeam && status === "2") {
               console.log(`\nDEBUG - Live match found:`);
@@ -158,7 +142,6 @@ app.get("/api/fixtures", async (req, res) => {
                   .join(", ")
               );
             }
-
             console.log(
               `Match ${idx}: ${homeTeam} (${
                 homeScore || "-"
@@ -166,11 +149,11 @@ app.get("/api/fixtures", async (req, res) => {
                 awayScore || "-"
               }) - Status: ${status}, Minute: ${minute || "N/A"}`
             );
-
             if (!homeTeam || !awayTeam) {
               console.log(`Skipping: missing team names`);
               return;
             }
+
 
             // Check if match is today by comparing date
             const matchTimestamp = fields["AD"]; // Match date timestamp
@@ -191,6 +174,7 @@ app.get("/api/fixtures", async (req, res) => {
                 return;
               }
             }
+
 
             // Check if we have minute data from HTML scraping
             const matchKey = `${homeTeam}-vs-${awayTeam}`;
@@ -218,20 +202,16 @@ app.get("/api/fixtures", async (req, res) => {
               // Finished match
               statusShort = "FT";
             }
-
             const homeGoals = homeScore ? parseInt(homeScore) : 0;
             const awayGoals = awayScore ? parseInt(awayScore) : 0;
-
             console.log(
               `Adding fixture: ${homeTeam} ${homeGoals} vs ${awayGoals} ${awayTeam}`
             );
-
             const leagueName = leaguePath
               .split("/")
               .pop()
               .replace(/-/g, " ")
               .toUpperCase();
-
             allFixtures.push({
               fixture: {
                 id: fixtureId++,
@@ -266,7 +246,6 @@ app.get("/api/fixtures", async (req, res) => {
             console.log("Error parsing match entry:", error.message);
           }
         });
-
         console.log(
           `Finished parsing ${leaguePath}, found ${allFixtures.length} total fixtures so far`
         );
@@ -274,11 +253,9 @@ app.get("/api/fixtures", async (req, res) => {
         console.error(`Error fetching league ${leaguePath}:`, error.message);
       }
     }
-
     console.log(
       `Scraped ${allFixtures.length} fixtures from ${leaguePaths.length} league(s)`
     );
-
     // Return in API-Football format for compatibility
     res.json({
       response: allFixtures,
@@ -290,7 +267,6 @@ app.get("/api/fixtures", async (req, res) => {
       .json({ error: "Failed to scrape data", details: err.message });
   }
 });
-
 app.listen(PORT, () => {
   console.log(`Server is running on http://localhost:${PORT}`);
 });
