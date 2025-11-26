@@ -52,11 +52,7 @@ export const SearchBar = ({ onLeagueChange, onSearch }) => {
       name: "Elite League U20",
       country: "Europe",
     },
-    {
-      id: "europe/uefa-youth-league",
-      name: "UEFA Youth League",
-      country: "Europe",
-    },
+
     { id: "europe/world-cup", name: "World Cup", country: "World" },
   ];
 
